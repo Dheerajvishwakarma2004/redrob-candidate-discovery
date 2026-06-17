@@ -25,7 +25,7 @@ To reproduce the submission on a fresh machine, run these commands in sequence.
 Ensure you have **Python 3.10+** installed. Clone the repository and install all dependencies:
 ```bash
 # Clone the repository
-git clone <repository_url>
+git clone https://github.com/Dheerajvishwakarma2004/redrob-candidate-discovery.git
 cd redrob-candidate-discovery
 
 # Create and activate a virtual environment
