@@ -105,8 +105,14 @@ class AlignmentFeatureEngine:
     def _compute_bucket_embeddings(self) -> None:
         try:
             from sentence_transformers import SentenceTransformer
+            from pathlib import Path
             model_name = config.get("embedding", "model")
-            model = SentenceTransformer(model_name)
+            model_path = Path(model_name)
+            if model_path.exists() and (model_path / "pytorch_model.bin").exists():
+                model = SentenceTransformer(model_name)
+            else:
+                model = SentenceTransformer("BAAI/bge-small-en-v1.5")
+                
             for name, desc in CONCEPT_DESCRIPTIONS.items():
                 emb = model.encode(desc, normalize_embeddings=True, show_progress_bar=False)
                 self._bucket_embeddings[name] = emb.astype(np.float32)
