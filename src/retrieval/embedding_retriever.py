@@ -142,6 +142,7 @@ class EmbeddingRetriever:
         dim = self._unified_embs.shape[1]
         self._index = faiss.IndexFlatIP(dim)
         self._index.add(self._unified_embs.astype(np.float32))
+        self._faiss_path.parent.mkdir(parents=True, exist_ok=True)
         faiss.write_index(self._index, str(self._faiss_path))
         logger.info(f"FAISS index: {self._index.ntotal:,} vectors, dim={dim}")
 
