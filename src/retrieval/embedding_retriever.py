@@ -24,10 +24,11 @@ class EmbeddingRetriever:
         self._model_name = config.get("embedding", "model")
         self._batch_size = config.get("embedding", "batch_size", default=256)
         self._top_k = config.get("retrieval", "embedding_top_k", default=3000)
-        self._unified_path = Path(config.get("paths", "unified_embeddings"))
-        self._career_path = Path(config.get("paths", "career_embeddings"))
-        self._faiss_path = Path(config.get("paths", "faiss_index"))
-        self._id_path = Path(config.get("paths", "id_order"))
+        base = Path(__file__).resolve().parent.parent.parent
+        self._unified_path = base / config.get("paths", "unified_embeddings")
+        self._career_path = base / config.get("paths", "career_embeddings")
+        self._faiss_path = base / config.get("paths", "faiss_index")
+        self._id_path = base / config.get("paths", "id_order")
         self._index: Optional[faiss.Index] = None
         self._id_order: Optional[np.ndarray] = None
         self._unified_embs: Optional[np.ndarray] = None
