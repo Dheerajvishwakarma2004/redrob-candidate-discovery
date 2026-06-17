@@ -84,7 +84,11 @@ class SandboxRankingRunner:
             emb_retriever._id_order = np.array(df["candidate_id"].tolist())
             emb_retriever._unified_embs = emb_retriever._encode(df["unified_text"].fillna("").tolist(), "Unified")
             emb_retriever._career_embs = emb_retriever._encode(df["career_descriptions_combined"].fillna("").tolist(), "Career")
-            emb_retriever._build_faiss()
+            # Build FAISS index strictly in RAM (bypass disk write)
+            import faiss
+            dim = emb_retriever._unified_embs.shape[1]
+            emb_retriever._index = faiss.IndexFlatIP(dim)
+            emb_retriever._index.add(emb_retriever._unified_embs.astype(np.float32))
             
             pool = HybridRetriever(bm25, emb_retriever).retrieve(jd_profile, df)
             pool_career_embs = emb_retriever.get_career_embeddings_batch(pool["candidate_id"].tolist())
