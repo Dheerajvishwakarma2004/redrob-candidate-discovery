@@ -1,0 +1,45 @@
+
+team_name: "Redrob Candidate Discovery Team"
+submission_date: "2026-06-11"
+model_version: "3.0"
+
+approach:
+  retrieval: "Hybrid BM25 + BGE-small embeddings + FAISS"
+  ranking: "Weighted scoring (no supervised LTR — no labels available)"
+  features:
+    - career_relevance
+    - technical_relevance
+    - skill_career_alignment
+    - recruitability_score
+    - semantic_similarity
+    - experience_fit
+    - education_score
+    - archetype_score
+  honeypot_defense:
+    - zero_career_penalty
+    - career_skill_mismatch
+    - foundational_skill_check
+    - skill_density_check
+    - timeline_inconsistency
+
+runtime:
+  environment: "CPU only"
+  ram_usage_gb: "~4-6 GB peak"
+  ranking_stage_minutes: "<3 min (after cache)"
+  embedding_generation: "~25 min first run, cached after"
+
+redrob_signals_used:
+  - recruiter_response_rate
+  - saved_by_recruiters_30d
+  - interview_completion_rate
+  - open_to_work
+  - notice_period_days
+
+embedding_model: "BAAI/bge-small-en-v1.5"
+candidate_pool_size: 1500
+top_n_output: 100
+
+reproducibility:
+  random_seed: "N/A (deterministic pipeline)"
+  cache_invalidation: "Source file mtime vs embedding mtime"
+  config_file: "config.yaml"

@@ -1,0 +1,13 @@
+# sandbox/.streamlit/config.toml
+[theme]
+primaryColor = "#1E88E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F8F9FA"
+textColor = "#212121"
+font = "sans serif"
+
+[server]
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+maxUploadSize = 10

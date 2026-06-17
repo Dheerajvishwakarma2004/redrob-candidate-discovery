@@ -1,0 +1,245 @@
+# =============================================================================
+# Redrob Intelligent Candidate Discovery
+# Master Configuration
+# All weights and thresholds here. Nothing hardcoded in modules.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Paths
+# -----------------------------------------------------------------------------
+paths:
+  processed_candidates:   "data/processed/candidates.parquet"
+  unified_embeddings:     "data/embeddings/unified.npy"
+  career_embeddings:      "data/embeddings/career.npy"
+  faiss_index:            "data/embeddings/index.faiss"
+  id_order:               "data/embeddings/id_order.npy"
+  internal_output:        "outputs/internal.csv"
+  submission_output:      "outputs/submission.csv"
+
+# -----------------------------------------------------------------------------
+# Embedding Model
+# BGE-small outperforms MiniLM on retrieval benchmarks.
+# CPU-compatible. ~130MB. No GPU required.
+# -----------------------------------------------------------------------------
+embedding:
+  model: "models/bge-small-en-v1.5"
+  batch_size: 256
+
+# -----------------------------------------------------------------------------
+# Retrieval
+# Pool sized for recall vs runtime balance.
+# Safety nets guarantee rare high-value candidates are not missed.
+# -----------------------------------------------------------------------------
+retrieval:
+  bm25_top_k: 2000
+  embedding_top_k: 3000
+  final_pool_size: 1500
+
+  # Candidates with these title terms always included
+  title_safety_net:
+    - "ml engineer"
+    - "machine learning"
+    - "ai engineer"
+    - "data scientist"
+    - "nlp engineer"
+    - "search engineer"
+    - "recommendation"
+    - "ranking engineer"
+    - "retrieval engineer"
+    - "research engineer"
+    - "applied scientist"
+    - "mlops"
+
+  # Candidates with these terms in skills or career descriptions always included
+  # Fewer than 200 candidates have these. Missing one hurts NDCG@10 severely.
+  keyword_safety_net:
+    - "learning to rank"
+    - "bm25"
+    - "search relevance"
+    - "ranking system"
+    - "recommendation engine"
+    - "information retrieval"
+    - "faiss"
+    - "vector search"
+    - "candidate ranking"
+    - "search engine"
+
+# -----------------------------------------------------------------------------
+# JD Understanding
+# Concept buckets for JD-adaptive weight generation.
+# Low confidence threshold triggers fallback to default weights.
+# -----------------------------------------------------------------------------
+jd:
+  low_confidence_threshold: 0.28
+  fallback_weights:
+    retrieval:       0.30
+    ranking:         0.25
+    recommendation:  0.20
+    ml_engineering:  0.20
+    llm:             0.05
+
+# -----------------------------------------------------------------------------
+# Scoring Weights
+# Must sum to 1.0
+# TUNING TARGET: Adjust after calibration run.
+# -----------------------------------------------------------------------------
+scoring:
+  career:          0.30
+  technical:       0.26
+  alignment:       0.16
+  recruitability:  0.12
+  semantic:        0.08
+  experience:      0.05
+  archetype:       0.02
+  education:       0.01
+
+# -----------------------------------------------------------------------------
+# Career Score Internal Weights
+# Must sum to 1.0
+# -----------------------------------------------------------------------------
+career_weights:
+  title_relevance:              0.40
+  consistency:                  0.30
+  description_relevance:        0.15
+  industry_alignment:           0.05
+  progression:                  0.10
+
+# -----------------------------------------------------------------------------
+# Technical Score
+# Weights generated dynamically from JD embedding.
+# These are fallback defaults only.
+# Must sum to 1.0
+# -----------------------------------------------------------------------------
+technical_weights:
+  retrieval:       0.30
+  ranking:         0.25
+  recommendation:  0.20
+  ml_engineering:  0.20
+  llm:             0.05
+
+# -----------------------------------------------------------------------------
+# Recruitability Score
+# GitHub removed: median value is -1 (missing). Non-discriminating.
+# Must sum to 1.0
+# -----------------------------------------------------------------------------
+recruitability_weights:
+  recruiter_response_rate:    0.38
+  saved_by_recruiters_30d:    0.27
+  interview_completion_rate:  0.22
+  open_to_work:               0.08
+  notice_period_days:         0.05
+
+# -----------------------------------------------------------------------------
+# Education Weights
+# Education is weak signal in this dataset (synthetic, uniform).
+# Keep low. Must sum to 1.0.
+# -----------------------------------------------------------------------------
+education_weights:
+  tier:    0.40
+  field:   0.40
+  degree:  0.20
+
+# -----------------------------------------------------------------------------
+# Experience Fit Curve
+# [upper_bound_years, score]
+# First match wins.
+# -----------------------------------------------------------------------------
+experience_curve:
+  - [2,   0.20]
+  - [3,   0.40]
+  - [4,   0.55]
+  - [5,   0.70]
+  - [6,   0.90]
+  - [8,   1.00]
+  - [9,   0.90]
+  - [11,  0.75]
+  - [13,  0.60]
+  - [15,  0.50]
+  - [999, 0.40]
+
+# -----------------------------------------------------------------------------
+# Alignment
+# Hybrid: exact match + semantic similarity
+# Threshold: minimum score to consider a bucket "supported"
+# -----------------------------------------------------------------------------
+alignment:
+  support_threshold:   0.40
+  exact_weight:        0.60
+  semantic_weight:     0.40
+  max_exact_hits:      5
+  retrieval_boost:     0.00
+  ranking_boost:       0.00
+
+# -----------------------------------------------------------------------------
+# Honeypot Detection
+# Conservative on false positives. Aggressive on clear patterns.
+# Cap prevents over-penalizing any single candidate.
+# TUNING TARGET: Raise thresholds if legitimate candidates penalized.
+# -----------------------------------------------------------------------------
+honeypot:
+  # Zero career history + strong technical claims
+  zero_career_penalty:          0.20
+  zero_career_skill_threshold:  0.45
+
+  # Career-skill mismatch
+  mismatch_strong_penalty:      0.25
+  mismatch_strong_title_max:    0.35
+  mismatch_strong_tech_min:     0.40
+
+  mismatch_weak_penalty:        0.15
+  mismatch_weak_title_max:      0.45
+  mismatch_weak_tech_min:       0.45
+
+  mismatch_consistency_penalty: 0.15
+  mismatch_consistency_max:     0.22
+  mismatch_consistency_tech:    0.38
+
+  # Foundational skill absence
+  foundational_penalty:         0.10
+  advanced_min_count:           3
+  foundational_required:        1
+
+  # Skill density (few total, many advanced)
+  density_penalty:              0.10
+  density_total_max:            5
+  density_advanced_min:         3
+
+  # Timeline inconsistency (widened for synthetic dataset)
+  timeline_strong_years:        7
+  timeline_weak_years:          5
+  timeline_strong_penalty:      0.10
+  timeline_weak_penalty:        0.05
+
+  # Extended Honeypot Rules
+  p_assess_penalty:             0.10
+  p_low_resp_penalty:           0.15
+  p_unverified_claims_penalty:  0.15
+  p_signup_penalty:             0.05
+  p_inactive_otw_penalty:       0.03
+
+  total_cap:                    0.45
+
+# -----------------------------------------------------------------------------
+# Archetype
+# Feature scores only. No multipliers.
+# -----------------------------------------------------------------------------
+archetype:
+  scores:
+    retrieval_recommendation: 1.0
+    ml_engineer:              0.80
+    data_software:            0.60
+    other:                    0.30
+  thresholds:
+    retrieval_skill_min:      0.50
+    ranking_skill_min:        0.50
+    recommendation_skill_min: 0.50
+    career_evidence_min:      0.48
+    ml_score_min:             0.40
+    title_for_ml:             0.65
+    title_for_ds:             0.45
+
+# -----------------------------------------------------------------------------
+# Output
+# -----------------------------------------------------------------------------
+output:
+  top_n: 100

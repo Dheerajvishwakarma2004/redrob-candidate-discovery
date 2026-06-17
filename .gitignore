@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Heavy Data & Models (MUST NOT PUSH)
+/data/raw/*.jsonl
+/data/processed/*.parquet
+/data/embeddings/*.npy
+/data/embeddings/*.faiss
+/models/
+
+# Output and runtime results
+/outputs/*.csv
+/outputs/*.md
+sandbox/sample_data/temp_500_candidates.jsonl
+
+# Logs
+*.log
+.pytest_cache/
