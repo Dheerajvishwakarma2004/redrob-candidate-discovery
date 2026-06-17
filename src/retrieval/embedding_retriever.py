@@ -36,8 +36,13 @@ class EmbeddingRetriever:
     @property
     def model(self) -> SentenceTransformer:
         if self._model is None:
-            logger.info(f"Loading model: {self._model_name}")
-            self._model = SentenceTransformer(self._model_name)
+            model_path = Path(self._model_name)
+            if model_path.exists() and (model_path / "pytorch_model.bin").exists():
+                logger.info(f"Loading model from local path: {self._model_name}")
+                self._model = SentenceTransformer(self._model_name)
+            else:
+                logger.info("Local model not found. Downloading BAAI/bge-small-en-v1.5 from HuggingFace.")
+                self._model = SentenceTransformer("BAAI/bge-small-en-v1.5")
         return self._model
 
     def prepare(self, df: pd.DataFrame, source_path: Optional[str] = None) -> None:

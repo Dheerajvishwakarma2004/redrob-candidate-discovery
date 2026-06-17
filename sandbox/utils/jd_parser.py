@@ -59,7 +59,7 @@ def get_embedding_model() -> SentenceTransformer:
     for p in local_paths:
         if p.exists() and (p / "pytorch_model.bin").exists():
             return SentenceTransformer(str(p))
-    raise FileNotFoundError("Local model directory models/bge-small-en-v1.5 not found. Run download_artifacts.py first.")
+    return SentenceTransformer("BAAI/bge-small-en-v1.5")
 
 class DocumentLoader:
     def load_text(self, text: str) -> str:
